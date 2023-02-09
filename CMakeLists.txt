@@ -20,6 +20,7 @@ project(
 )
 
 # Dependencies
+add_subdirectory("deps/minhook")
 
 # Projects
 add_subdirectory("common/")

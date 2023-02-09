@@ -1,9 +1,11 @@
 #include <Windows.h>
 #include <common/logging.hpp>
 #include <cstdio>
+#include <MinHook.h>
 
 auto __stdcall init_main(HMODULE hmod) -> DWORD {
   //mcbre_init_console();
+  MH_Initialize();
   return 0;
 }
 
