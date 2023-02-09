@@ -1,0 +1,10 @@
+out/
+bin/
+*.exe
+*.dll
+CMakeSettings.json
+.vs/
+.vscode/
+build/
+notes.txt
+.cache/
