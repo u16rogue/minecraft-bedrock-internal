@@ -2,7 +2,7 @@
 
 #include <sdk/vec.hpp>
 
-namespace mcsdk {
+namespace mc {
 
 struct entt {
   void * vtable;

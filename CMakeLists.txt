@@ -14,6 +14,8 @@ else()
   add_compile_definitions(MCBRE_LOGGING=0)
 endif()
 
+option(MCBRE_DONT_CARE_WIN_DEPS "Last ditch effort when these dependencies are actually resolved by cmake itself so you dont have to waste your time setting up cmake variables." OFF)
+if (NOT MCBRE_DONT_CARE_WIN_DEPS) # Do not indent, this is more of a #ifdef macro thing
 # -------------------------------------------------- 
 # --- Direct X
 set(MCBRE_DIRECTX_PATH "" CACHE PATH "Path to the installed DirectX SDK")
@@ -44,6 +46,7 @@ message("-- mcbre > WDK @ ${MCBRE_WDK_PATH}/${MCBRE_WDK_PLATFORM}/Include/${MCBR
 
 # ---  End of Windows SDK
 # -------------------------------------------------- 
+endif() # MCBRE_DONT_CARE_WIN_DEPS
 
 # Head Projects
 project(

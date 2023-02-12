@@ -22,6 +22,11 @@ auto __stdcall DllMain(HMODULE hmod, DWORD reason, LPVOID reserved) -> BOOL {
         CloseHandle(proc_hnd);
       break;
     }
+
+    case DLL_PROCESS_DETACH: {
+      hooks::uninitialize();
+    }
+
     default:
       break;
   }
