@@ -12,6 +12,12 @@ add_library(
   ${PROJECT_NAME}
 	SHARED
 	"main.cpp"
+
+	"hooks.hpp"
+	"hooks.cpp"
+
+	"mc_sdk/entt.hpp"
+	"mc_sdk/entt.cpp"
 )
 
 set_target_properties(
@@ -26,5 +32,6 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE
 	mcbre_common_lib
+	mcbre_sdk
 	minhook
 )

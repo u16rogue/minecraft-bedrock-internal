@@ -1,11 +1,16 @@
 #include <Windows.h>
-#include <common/logging.hpp>
 #include <cstdio>
+#include <cstdint>
+
 #include <MinHook.h>
 
+#include <common/logging.hpp>
+#include <sdk/vec.hpp>
+
+#include "hooks.hpp"
+
 auto __stdcall init_main(HMODULE hmod) -> DWORD {
-  //mcbre_init_console();
-  MH_Initialize();
+  hooks::initialize();
   return 0;
 }
 

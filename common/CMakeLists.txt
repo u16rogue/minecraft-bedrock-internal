@@ -12,6 +12,9 @@ add_library(
 
 	"include/common/metapp.hpp"
 	"include/common/pattern_scanner.hpp"
+
+	"include/common/fnvhash.hpp"
+	"src/fnvhash.cpp"
 )
 
 target_include_directories(
