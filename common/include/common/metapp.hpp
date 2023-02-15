@@ -25,13 +25,18 @@ template <typename T, int sz>
 struct comptime_str {
   consteval comptime_str(const T (&str)[sz]) {
     for (int i = 0; i < sz; ++i) {
-      data[i] = str[i];
+      _data[i] = str[i];
     }
   }
 
-  T data[sz];
+  using _T = T[sz];
+  _T _data;
 
-  consteval auto length() -> int {
+  consteval auto data() const -> const _T& {
+    return _data;
+  }
+
+  consteval auto length() const -> int {
     return sz;
   }
 };

@@ -11,7 +11,9 @@ add_library(
 	"src/logging.cpp"
 
 	"include/common/metapp.hpp"
+
 	"include/common/pattern_scanner.hpp"
+	"src/pattern_scanner.cpp"
 
 	"include/common/fnvhash.hpp"
 	"src/fnvhash.cpp"
