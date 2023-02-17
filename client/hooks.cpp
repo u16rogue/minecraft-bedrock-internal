@@ -27,13 +27,14 @@
   (MH_CreateHook(reinterpret_cast<void *>(addr), reinterpret_cast<void *>(&__hk_##name), reinterpret_cast<void **>(&name)) == MH_OK)
 
 #define offsets(...) __VA_OPT__(,) __VA_ARGS__
-#define mcbre_mk_hk(modname, sig, offsets, rt, name, ...)                                     \
+
+#define mcbre_mk_hk(modname, sig, offsets_, rt, name, ...)                                    \
   static rt(*name)(__VA_ARGS__) = nullptr;                                                    \
   static auto __hk_##name(__VA_ARGS__) -> rt;                                                 \
   static mcbre_imm {                                                                          \
     registered_hooks.emplace_back(hook_entry {+[](void * base, int sz){                       \
         void * __##name##_sig = nullptr;                                                      \
-        mcbre::pattern_scan(base, sz, mcbre::pattern<sig>().frags, __##name##_sig offsets);   \
+        mcbre::pattern_scan(base, sz, mcbre::pattern<sig>().frags, __##name##_sig offsets_);  \
         return __##name##_sig;                                                                \
     }, modname, mcbre::hash::fnv32(modname), &name, reinterpret_cast<void *>(&__hk_##name)}); \
   };                                                                                          \
@@ -60,25 +61,24 @@ static std::vector<hook_entry> registered_hooks;
 // ---------------------------------------------------------------------------------------------------- 
 // --- Hooks
 
-mcbre_mk_hk("Minecraft.Windows.exe", "57 48 83 EC 20 48 8B 81 ? ? ? ? 48 8B DA 48 8B F9", offsets(-5),
-void, mc_entt_add_delta, mc::entt * self, mcbre::sdk::vec3 * delta) {
+mcbre_mk_hk("Minecraft.Windows.exe", "57 48 83 EC 20 48 8B 81 ? ? ? ? 48 8B DA 48 8B F9", offsets(-5), void, mc_entt_add_delta, mc::entt * self, mcbre::sdk::vec3 * delta) {
   static bool cunny = false;
   if (GetAsyncKeyState(VK_SPACE) & 0x1)
     cunny = !cunny;
   if (cunny)
     delta->y = 0.01;
   return mc_entt_add_delta(self, delta);
-}
+};
 
 mcbre_mk_hk("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 60 45", offsets(-26),
 HRESULT, dx_present, void * self, UINT SyncInterval, UINT Flags) {
   return dx_present(self, SyncInterval, Flags);
 }
-
-mcbre_mk_hk("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 27 49 8B 41", offsets(-24),
-HRESULT, dx_present1, void * self, UINT SyncInterval, UINT PresentFlags, void * pPresentParameters) {
-  return dx_present1(self, SyncInterval, PresentFlags, pPresentParameters);
-}
+// 
+// mcbre_mk_hk("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 27 49 8B 41", offsets(-24),
+// HRESULT, dx_present1, void * self, UINT SyncInterval, UINT PresentFlags, void * pPresentParameters) {
+//   return dx_present1(self, SyncInterval, PresentFlags, pPresentParameters);
+// }
 
 // --- End of Hooks
 // ---------------------------------------------------------------------------------------------------- 
@@ -91,7 +91,7 @@ auto hooks::initialize() -> bool {
   for (auto & hk : registered_hooks) {
     if (module_cache.find(hk.hashed_modname) == module_cache.end())
       module_cache[hk.hashed_modname] = module_info(hk.modname);
-    auto [base, sz] = module_cache[hk.hashed_modname]; // module_cache[hk.modname];
+    const auto & [base, sz] = module_cache[hk.hashed_modname]; // module_cache[hk.modname];
     if (!base)
       continue;
     void * target = hk.lookup(base, sz);
