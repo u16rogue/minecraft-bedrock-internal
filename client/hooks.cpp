@@ -36,7 +36,7 @@
         void * __##name##_sig = nullptr;                                                      \
         mcbre::pattern_scan(base, sz, mcbre::pattern<sig>().frags, __##name##_sig offsets_);  \
         return __##name##_sig;                                                                \
-    }, modname, mcbre::hash::fnv32(modname), &name, reinterpret_cast<void *>(&__hk_##name)}); \
+    }, modname, &name, reinterpret_cast<void *>(&__hk_##name)}); \
   };                                                                                          \
   static auto __hk_##name(__VA_ARGS__) -> rt
 
@@ -49,7 +49,6 @@ static auto module_info(const char * name) -> std::pair<std::uint8_t *, std::siz
 struct hook_entry {
   void*(*lookup)(void * base, int sz);
   const char * modname;
-  std::uint32_t hashed_modname;
   void * pout;
   void * hkfn;
 
@@ -61,12 +60,8 @@ static std::vector<hook_entry> registered_hooks;
 // ---------------------------------------------------------------------------------------------------- 
 // --- Hooks
 
-mcbre_mk_hk("Minecraft.Windows.exe", "57 48 83 EC 20 48 8B 81 ? ? ? ? 48 8B DA 48 8B F9", offsets(-5), void, mc_entt_add_delta, mc::entt * self, mcbre::sdk::vec3 * delta) {
-  static bool cunny = false;
-  if (GetAsyncKeyState(VK_SPACE) & 0x1)
-    cunny = !cunny;
-  if (cunny)
-    delta->y = 0.01;
+mcbre_mk_hk("Minecraft.Windows.exe", "57 48 83 EC 20 48 8B 81 ? ? ? ? 48 8B DA 48 8B F9", offsets(-5),
+void, mc_entt_add_delta, mc::entt * self, mcbre::sdk::vec3 * delta) {
   return mc_entt_add_delta(self, delta);
 };
 
@@ -87,11 +82,11 @@ auto hooks::initialize() -> bool {
   if (MH_Initialize() != MH_OK)
     return false;
 
-  std::unordered_map<std::uint32_t, std::pair<std::uint8_t *, int>> module_cache = {};
+  std::unordered_map<std::string, std::pair<std::uint8_t *, int>> module_cache = {};
   for (auto & hk : registered_hooks) {
-    if (module_cache.find(hk.hashed_modname) == module_cache.end())
-      module_cache[hk.hashed_modname] = module_info(hk.modname);
-    const auto & [base, sz] = module_cache[hk.hashed_modname]; // module_cache[hk.modname];
+    if (module_cache.find(hk.modname) == module_cache.end())
+      module_cache[hk.modname] = module_info(hk.modname);
+    const auto & [base, sz] = module_cache[hk.modname];
     if (!base)
       continue;
     void * target = hk.lookup(base, sz);
