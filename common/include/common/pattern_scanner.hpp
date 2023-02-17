@@ -122,14 +122,15 @@ auto pattern_scan(void * base, int sz, const details::pattern_fragment (&pattern
     return false;
   }
 
+  std::uint8_t *& as_u8 = *reinterpret_cast<std::uint8_t **>(&out);
   ([&]{
-    auto as_u8 = reinterpret_cast<std::uint8_t *&>(out);
     if constexpr (sizeof...(offsets) == 1) {
       as_u8 += offsets;
     } else {
       as_u8 = *reinterpret_cast<std::uint8_t **>(as_u8 + offsets);
     }
   } (), ...);
+  *reinterpret_cast<void **>(&out) = as_u8;
   return true;
 }
 

@@ -74,11 +74,11 @@ mcbre_mk_hk("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 60 45", offsets(-26)
 HRESULT, dx_present, void * self, UINT SyncInterval, UINT Flags) {
   return dx_present(self, SyncInterval, Flags);
 }
-// 
-// mcbre_mk_hk("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 27 49 8B 41", offsets(-24),
-// HRESULT, dx_present1, void * self, UINT SyncInterval, UINT PresentFlags, void * pPresentParameters) {
-//   return dx_present1(self, SyncInterval, PresentFlags, pPresentParameters);
-// }
+
+mcbre_mk_hk("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 27 49 8B 41", offsets(-24),
+HRESULT, dx_present1, void * self, UINT SyncInterval, UINT PresentFlags, void * pPresentParameters) {
+  return dx_present1(self, SyncInterval, PresentFlags, pPresentParameters);
+}
 
 // --- End of Hooks
 // ---------------------------------------------------------------------------------------------------- 
