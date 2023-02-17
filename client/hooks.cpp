@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <tuple>
+#include <unordered_map>
+#include <string>
 // --
 #include <Windows.h>
 #include <psapi.h>
@@ -10,6 +12,7 @@
 #include <MinHook.h>
 // --
 #include <common/pattern_scanner.hpp>
+#include <common/fnvhash.hpp>
 #include <sdk/vec.hpp>
 #include "mc_sdk/entt.hpp"
 
@@ -18,45 +21,23 @@
 
 #define __mk_hk(rt, name, ...)                \
   static rt(*name)(__VA_ARGS__) = nullptr;    \
-  static auto __hk_##name(__VA_ARGS__) -> rt; \
   static auto __hk_##name(__VA_ARGS__) -> rt
 
 #define __cr_hk(name, addr) \
   (MH_CreateHook(reinterpret_cast<void *>(addr), reinterpret_cast<void *>(&__hk_##name), reinterpret_cast<void **>(&name)) == MH_OK)
 
-// NOTE
-// [16/02/2023] - According to docu it should be able to capture refences to structure bindings (https://en.cppreference.com/w/cpp/language/structured_binding)
-// but apparently not. This fails to compile (clang 15.x) when capturing the structured bindings.
-#define __cr_hk_pattern(name, sig, ...)                                                                                                             \
-  [](void * base, int sz) -> bool {                                                                                                                 \
-    void * __##name##_sig = nullptr;                                                                                                                \
-    return (mcbre::pattern_scan(base, sz, mcbre::pattern<sig>().frags, __##name##_sig __VA_OPT__(,) __VA_ARGS__) && __cr_hk(name, __##name##_sig)); \
-  } (base, sz)
-
-
-// ---------------------------------------------------------------------------------------------------- 
-// --- Hooks
-
-__mk_hk(void, mc_entt_add_delta, mc::entt * self, mcbre::sdk::vec3 * delta) {
-  return mc_entt_add_delta(self, delta);
-}
-
-__mk_hk(HRESULT, dx_present, void * self, UINT SyncInterval, UINT Flags) {
-  return dx_present(self, SyncInterval, Flags);
-}
-
-__mk_hk(HRESULT, dx_present1, void * self, UINT SyncInterval, UINT PresentFlags, void * pPresentParameters) {
-  return dx_present1(self, SyncInterval, PresentFlags, pPresentParameters);
-}
-
-__mk_hk(LRESULT, wndproc, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-  if (msg == WM_KEYDOWN && wp == 0x57)
-    return TRUE;
-  return wndproc(hwnd, msg, wp, lp);
-}
-
-// --- End of Hooks
-// ---------------------------------------------------------------------------------------------------- 
+#define offsets(...) __VA_OPT__(,) __VA_ARGS__
+#define mcbre_mk_hk(modname, sig, offsets, rt, name, ...)                                     \
+  static rt(*name)(__VA_ARGS__) = nullptr;                                                    \
+  static auto __hk_##name(__VA_ARGS__) -> rt;                                                 \
+  static mcbre_imm {                                                                          \
+    registered_hooks.emplace_back(hook_entry {+[](void * base, int sz){                       \
+        void * __##name##_sig = nullptr;                                                      \
+        mcbre::pattern_scan(base, sz, mcbre::pattern<sig>().frags, __##name##_sig offsets);   \
+        return __##name##_sig;                                                                \
+    }, modname, mcbre::hash::fnv32(modname), &name, reinterpret_cast<void *>(&__hk_##name)}); \
+  };                                                                                          \
+  static auto __hk_##name(__VA_ARGS__) -> rt
 
 static auto module_info(const char * name) -> std::pair<std::uint8_t *, std::size_t> {
   MODULEINFO mi = {};
@@ -64,20 +45,59 @@ static auto module_info(const char * name) -> std::pair<std::uint8_t *, std::siz
   return std::make_pair(reinterpret_cast<std::uint8_t *>(mi.lpBaseOfDll), static_cast<std::size_t>(mi.SizeOfImage));
 }
 
+struct hook_entry {
+  void*(*lookup)(void * base, int sz);
+  const char * modname;
+  std::uint32_t hashed_modname;
+  void * pout;
+  void * hkfn;
+
+  bool hooked = false;
+};
+
+static std::vector<hook_entry> registered_hooks;
+
+// ---------------------------------------------------------------------------------------------------- 
+// --- Hooks
+
+mcbre_mk_hk("Minecraft.Windows.exe", "57 48 83 EC 20 48 8B 81 ? ? ? ? 48 8B DA 48 8B F9", offsets(-5),
+void, mc_entt_add_delta, mc::entt * self, mcbre::sdk::vec3 * delta) {
+  static bool cunny = false;
+  if (GetAsyncKeyState(VK_SPACE) & 0x1)
+    cunny = !cunny;
+  if (cunny)
+    delta->y = 0.01;
+  return mc_entt_add_delta(self, delta);
+}
+
+mcbre_mk_hk("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 60 45", offsets(-26),
+HRESULT, dx_present, void * self, UINT SyncInterval, UINT Flags) {
+  return dx_present(self, SyncInterval, Flags);
+}
+
+mcbre_mk_hk("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 27 49 8B 41", offsets(-24),
+HRESULT, dx_present1, void * self, UINT SyncInterval, UINT PresentFlags, void * pPresentParameters) {
+  return dx_present1(self, SyncInterval, PresentFlags, pPresentParameters);
+}
+
+// --- End of Hooks
+// ---------------------------------------------------------------------------------------------------- 
+
 auto hooks::initialize() -> bool {
   if (MH_Initialize() != MH_OK)
     return false;
 
-  if (__mk_mod(NULL);
-    !__cr_hk_pattern(mc_entt_add_delta, "57 48 83 EC 20 48 8B 81 ? ? ? ? 48 8B DA 48 8B F9", -5)
-  ) {
-  }
-
-  if (__mk_mod("dxgi.dll");
-     !__cr_hk_pattern(dx_present,  "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 60 45",       -26)
-  || !__cr_hk_pattern(dx_present1, "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 27 49 8B 41", -24)
-  ) {
-    TerminateProcess(GetCurrentProcess(), 0);
+  std::unordered_map<std::uint32_t, std::pair<std::uint8_t *, int>> module_cache = {};
+  for (auto & hk : registered_hooks) {
+    if (module_cache.find(hk.hashed_modname) == module_cache.end())
+      module_cache[hk.hashed_modname] = module_info(hk.modname);
+    auto [base, sz] = module_cache[hk.hashed_modname]; // module_cache[hk.modname];
+    if (!base)
+      continue;
+    void * target = hk.lookup(base, sz);
+    if (!target)
+      continue;
+    hk.hooked = MH_CreateHook(target, hk.hkfn, reinterpret_cast<void **>(hk.pout)) == MH_OK;
   }
 
   return MH_EnableHook(MH_ALL_HOOKS);
@@ -88,7 +108,8 @@ auto hooks::uninitialize() -> bool {
   return MH_DisableHook(MH_ALL_HOOKS);
 }
 
-
+#undef mcbre_mk_hk
+#undef offsets
 #undef __cr_hk_pattern
 #undef __cr_hk
 #undef __mk_hk

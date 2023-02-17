@@ -3,6 +3,8 @@
 #define mcbre_glue_proxy(x, y) x##y
 #define mcbre_glue(x, y) mcbre_glue_proxy(x, y)
 
+#define mcbre_va_list(...) __VA_ARGS__
+
 namespace mcbre::metapp::details {
 
 template <typename T>
@@ -10,6 +12,13 @@ struct __defer {
   __defer(T && fn_) : fn(fn_) {}
   ~__defer() { fn(); }
   T fn;
+};
+
+template <typename T>
+struct __imm {
+  __imm(T && fn) {
+    fn();
+  }
 };
 
 } // namespace mcbre::metapp::details
@@ -45,4 +54,7 @@ struct comptime_str {
 
 #define mcbre_defer \
   const mcbre::metapp::details::__defer mcbre_glue(__defer_, __COUNTER__) = [&]()
+
+#define mcbre_imm \
+  mcbre::metapp::details::__imm mcbre_glue(__imm, __COUNTER__) = []()
 
