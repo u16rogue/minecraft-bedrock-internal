@@ -36,7 +36,7 @@
         void * __##name##_sig = nullptr;                                                      \
         mcbre::pattern_scan(base, sz, mcbre::pattern<sig>().frags, __##name##_sig offsets_);  \
         return __##name##_sig;                                                                \
-    }, modname, &name, reinterpret_cast<void *>(&__hk_##name)}); \
+    }, modname, &name, reinterpret_cast<void *>(&__hk_##name)});                              \
   };                                                                                          \
   static auto __hk_##name(__VA_ARGS__) -> rt
 
@@ -95,12 +95,12 @@ auto hooks::initialize() -> bool {
     hk.hooked = MH_CreateHook(target, hk.hkfn, reinterpret_cast<void **>(hk.pout)) == MH_OK;
   }
 
-  return MH_EnableHook(MH_ALL_HOOKS);
+  return MH_EnableHook(MH_ALL_HOOKS) == MH_OK;
 }
 
 
 auto hooks::uninitialize() -> bool {
-  return MH_DisableHook(MH_ALL_HOOKS);
+  return MH_DisableHook(MH_ALL_HOOKS) == MH_OK;
 }
 
 #undef mcbre_mk_hk

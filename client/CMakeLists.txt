@@ -16,8 +16,12 @@ add_library(
 	"hooks.hpp"
 	"hooks.cpp"
 
+	"mc_sdk/list_container.hpp"
+
 	"mc_sdk/entt.hpp"
 	"mc_sdk/entt.cpp"
+	"mc_sdk/string_container.hpp"
+	"mc_sdk/string_container.cpp"
 )
 
 set_target_properties(
