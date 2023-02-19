@@ -15,6 +15,7 @@
 #include <common/fnvhash.hpp>
 #include <sdk/vec.hpp>
 #include "mc_sdk/entt.hpp"
+#include "mc_sdk/structs.hpp"
 
 #define __mk_mod(modn) \
   auto [base, sz] = module_info(modn)
@@ -36,7 +37,7 @@
         void * __##name##_sig = nullptr;                                                      \
         mcbre::pattern_scan(base, sz, mcbre::pattern<sig>().frags, __##name##_sig offsets_);  \
         return __##name##_sig;                                                                \
-    }, modname, &name, reinterpret_cast<void *>(&__hk_##name)});                              \
+    }, modname, &name, reinterpret_cast<void *>(&__hk_##name), mcbre::hash::cvfnv32(#name)}); \
   };                                                                                          \
   static auto __hk_##name(__VA_ARGS__) -> rt
 
@@ -52,6 +53,8 @@ struct hook_entry {
   void * pout;
   void * hkfn;
 
+  const std::uint32_t id;
+
   bool hooked = false;
 };
 
@@ -59,6 +62,23 @@ static std::vector<hook_entry> registered_hooks;
 
 // ---------------------------------------------------------------------------------------------------- 
 // --- Hooks
+
+mcbre_mk_hk("Minecraft.Windows.exe", "48 69 C9 ? ? ? ? 48 99 48 F7 FF 48 03 C1 48 8B 93", offsets(-58),
+void *, mc_maybe_chat_tick, mc::unk_0 * self) {
+  static void * last_end = nullptr;
+  if (void * cend = self->messages.end(); last_end != cend) {
+    last_end = cend;
+    // Message updated
+    
+    for (auto & d : self->messages) {
+      d.msg_data.c_str()[0] = 'H';
+      d.msg_data.c_str()[1] = 'i';
+      d.msg_data.c_str()[2] = ' ';
+    }
+  }
+  
+  return mc_maybe_chat_tick(self);
+};
 
 mcbre_mk_hk("Minecraft.Windows.exe", "57 48 83 EC 20 48 8B 81 ? ? ? ? 48 8B DA 48 8B F9", offsets(-5),
 void, mc_entt_add_delta, mc::entt * self, mcbre::sdk::vec3 * delta) {

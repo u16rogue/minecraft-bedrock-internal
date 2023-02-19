@@ -16,6 +16,7 @@ add_library(
 	"hooks.hpp"
 	"hooks.cpp"
 
+	"mc_sdk/structs.hpp"
 	"mc_sdk/list_container.hpp"
 
 	"mc_sdk/entt.hpp"

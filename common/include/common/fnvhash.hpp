@@ -10,7 +10,7 @@ constexpr auto fnv32(const char * data, int sz) -> std::uint32_t {
 
   i hash = 0x811c9dc5;
   for (int i = 0; i < sz; ++i) {
-    hash = (hash ^ reinterpret_cast<const std::uint8_t *>(data)[i]) * 0x01000193;
+    hash = (hash ^ static_cast<std::uint8_t>(data[i])) * 0x01000193;
   }
 
   return hash;

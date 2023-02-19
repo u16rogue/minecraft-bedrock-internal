@@ -7,6 +7,7 @@ template <typename T>
 struct list_container {
   T * pdata;
   T * pend;
+  T * preserved; // Reserved
 
   auto begin() -> T * { return pdata; }
   auto end() -> T * { return pend; }
