@@ -21,34 +21,38 @@ set(MCBRE_WDK_PLATFORM "10" CACHE PATH "Platform version of the WDK to use")
 set(MCBRE_WDK_VERSION "10.0.22621.0" CACHE PATH "Version of Windows SDK to use")
 option(MCBRE_DONT_CARE_WIN_DEPS "Last ditch effort when these dependencies are actually resolved by cmake itself so you dont have to waste your time setting up cmake variables." OFF)
 
-if (NOT MCBRE_DONT_CARE_WIN_DEPS) # Do not indent, this is more of a #ifdef macro thing
-# -------------------------------------------------- 
-# --- Direct X
-if (MCBRE_DIRECTX_PATH STREQUAL "")
-  if (NOT DEFINED ENV{DXSDK_DIR})
-    message(FATAL_ERROR "-- mcbre > DXSDK_DIR env was not found. Please manually set MCBRE_DIRECTX_PATH in your CMakeCache.txt or through -DMCBRE_DIRECTX_PATH=path")
+if (NOT MCBRE_DONT_CARE_WIN_DEPS)
+  # --- Direct X
+  if (MCBRE_DIRECTX_PATH STREQUAL "")
+    if (NOT DEFINED ENV{DXSDK_DIR})
+      message(FATAL_ERROR "-- mcbre > DXSDK_DIR env was not found. Please manually set MCBRE_DIRECTX_PATH in your CMakeCache.txt or through -DMCBRE_DIRECTX_PATH=path")
+    endif()
+    set(MCBRE_DIRECTX_PATH "$ENV{DXSDK_DIR}")
   endif()
-  set(MCBRE_DIRECTX_PATH "$ENV{DXSDK_DIR}")
-endif()
 
-if (NOT EXISTS "${MCBRE_DIRECTX_PATH}/Include/D3D11.h")
-  message(FATAL_ERROR "-- mcbre > DirectX SDK path was not found. (${MCBRE_DIRECTX_PATH})")
-endif()
+  if (NOT EXISTS "${MCBRE_DIRECTX_PATH}/Include/D3D11.h")
+    message(FATAL_ERROR "-- mcbre > DirectX SDK path was not found. (${MCBRE_DIRECTX_PATH})")
+  endif()
 
-message("-- mcbre > DirectX SDK @ ${MCBRE_DIRECTX_PATH}")
-# --- End of Direct X
-# -------------------------------------------------- 
-# ---  Windows SDK
-if (NOT EXISTS "${MCBRE_WDK_PATH}/${MCBRE_WDK_PLATFORM}/Include/${MCBRE_WDK_VERSION}/um/Windows.h")
-  message(FATAL_ERROR "-- mcbre > Failed to find Windows.h from the MCBRE_WDK_* parameters. Please properly setup the MCBRE_WDK_* variables.")
-endif()
+  message("-- mcbre > DirectX SDK @ ${MCBRE_DIRECTX_PATH}")
+  # ---  Windows SDK
+  if (NOT EXISTS "${MCBRE_WDK_PATH}/${MCBRE_WDK_PLATFORM}/Include/${MCBRE_WDK_VERSION}/um/Windows.h")
+    message(FATAL_ERROR "-- mcbre > Failed to find Windows.h from the MCBRE_WDK_* parameters. Please properly setup the MCBRE_WDK_* variables.")
+  endif()
 
-message("-- mcbre > WDK @ ${MCBRE_WDK_PATH}/${MCBRE_WDK_PLATFORM}/Include/${MCBRE_WDK_VERSION}")
-# ---  End of Windows SDK
-# -------------------------------------------------- 
+  message("-- mcbre > WDK @ ${MCBRE_WDK_PATH}/${MCBRE_WDK_PLATFORM}/Include/${MCBRE_WDK_VERSION}")
 endif() # MCBRE_DONT_CARE_WIN_DEPS
 
-# Head Projects
+# Setup build type macro definition
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  message("-- mcbre > MCBRE_DEBUG_BUILD=1")
+  add_compile_definitions(MCBRE_DEBUG_BUILD=1)
+else()
+  message("-- mcbre > MCBRE_DEBUG_BUILD=0")
+  add_compile_definitions(MCBRE_DEBUG_BUILD=0)
+endif()
+
+# Head Project
 project(
   mcbre
 )

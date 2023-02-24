@@ -30,6 +30,7 @@ set_target_properties(
 	PROPERTIES
 	CXX_STANDARD 20	
 	OUTPUT_NAME "client"
+	SUFFIX ".dll"
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/"
 )
 

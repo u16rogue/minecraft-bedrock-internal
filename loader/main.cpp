@@ -95,6 +95,12 @@ static auto set_security_details(std::filesystem::path file, const char * name) 
 
 auto main(int argc, char ** argv) -> int {
 
+#if defined(MCBRE_DEBUG_BUILD) && MCBRE_DEBUG_BUILD
+  mcbre_log("Debug build.");
+#else
+  mcbre_log("Non debug build.");
+#endif
+
   bool unload_only = false;
 
   if (argc > 1) {
