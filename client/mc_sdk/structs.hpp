@@ -25,11 +25,16 @@ struct unk_0 {
 struct keybind_info {
   mc::string_container key_tag; // name of the key
   mc::list_container<std::uint32_t> keys;
-  char pad1[8];
+  bool bflag1;
+  bool bflag2;
+  char pad1[6];
 };
 
 struct keybind_manager {
-  void * vtable;
+  struct {
+    void * pad0[9];
+    std::int64_t(*get_last_key_pressed)(keybind_manager * self);
+  } * vtable;
   mc::list_container<keybind_info> key_info;
 };
 

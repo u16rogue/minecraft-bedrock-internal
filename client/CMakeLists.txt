@@ -4,6 +4,8 @@ if (NOT TARGET mcbre_common_lib)
 	message(FATAL_ERROR "Missing common library target.")
 endif()
 
+option(MCBRE_STORE_HOOK_NAMES "Store hook names on hook info" ON)
+
 project(
 	mcbre_client
 )
@@ -15,6 +17,8 @@ add_library(
 
 	"hooks.hpp"
 	"hooks.cpp"
+	"values.hpp"
+	"values.cpp"
 
 	"mc_sdk/structs.hpp"
 	"mc_sdk/list_container.hpp"
@@ -41,3 +45,13 @@ target_link_libraries(
 	mcbre_sdk
 	minhook
 )
+
+if (MCBRE_STORE_HOOK_NAMES)
+	message("-- mcbre > Store hook name as string in hook_entry is enabled!")
+	target_compile_definitions(
+		mcbre_client
+		PRIVATE
+		MCBRE_STORE_HOOK_NAME=1
+	)
+endif()
+

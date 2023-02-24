@@ -12,6 +12,9 @@ add_library(
 
 	"include/common/metapp.hpp"
 
+	"include/common/utils.hpp"
+	"src/utils.cpp"
+
 	"include/common/pattern_scanner.hpp"
 	"src/pattern_scanner.cpp"
 

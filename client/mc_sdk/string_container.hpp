@@ -14,7 +14,13 @@ struct string_container {
   char unk[8];
 
   auto c_str() -> char *;
-  // auto operator=(std::string_view str) -> void;
+
+  auto set_str(const char * str, std::size_t sz) -> string_container &;
+  
+  template <int sz>
+  auto operator=(const char (&str)[sz]) -> string_container & {
+    return set_str(str, sz - 1);
+  }
 };
 
 /*

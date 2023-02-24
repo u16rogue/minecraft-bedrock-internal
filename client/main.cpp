@@ -7,9 +7,11 @@
 #include <common/logging.hpp>
 #include <sdk/vec.hpp>
 
+#include "values.hpp"
 #include "hooks.hpp"
 
 auto __stdcall init_main(HMODULE hmod) -> DWORD {
+  values::initialize();
   hooks::initialize();
   return 0;
 }
