@@ -60,43 +60,44 @@
   };                                                                                                                        \
   static auto __hk_##name(__VA_ARGS__) -> rt
 
+#if defined(MCBRE_LOGGING) && MCBRE_LOGGING == 1
+  #if defined(MCBRE_STORE_HOOK_NAME) && MCBRE_STORE_HOOK_NAME == 1
+    #define __hk_get_name(_) _.idstr
+  #else
+    #define __hk_get_name(_) _.id
+  #endif
+#endif
+
 static std::vector<hooks::hook_entry> registered_hooks;
 
 // ---------------------------------------------------------------------------------------------------- 
 // --- Hooks
 
-#if 0
-mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 89 7C 24 ? 41 56 48 83 EC 20 48 8B B9 ? ? ? ? 33", offsets(-15),
-bool, mc_unk_fn0, void * self, void * unk) {
-  static mc::keybind_manager * kb_manager = nullptr;
-  if (!kb_manager) {
-    std::uint8_t * p_obj = nullptr;
-    if (mcbre::utils::walk_offsets(p_obj, self, sizeof(std::int64_t) * 0xBA), 0x00) {
-      std::uint8_t ** v1 = reinterpret_cast<decltype(v1)>(p_obj + 0xAC0);
-      std::int32_t  * v2 = reinterpret_cast<decltype(v2)>(p_obj + 0xAB8);
-      std::uint8_t  * v3 = *v1 + (*v2 * 0xC0);
-      kb_manager = *reinterpret_cast<mc::keybind_manager **>(v3 + 0x8);
-      for (auto & kb : kb_manager->key_info) {
-        mcbre_log_dbg("\nKB Entry: {}", kb.key_tag.c_str());
-      }
-    }
-  }
+mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 56 41 57 48 8B EC 48 83 EC ?? 48 8B F9", offsets(),
+std::uint64_t, mc_send_message_callback, void * self) {
+  mc::string_container * msg = reinterpret_cast<decltype(msg)>( reinterpret_cast<std::uintptr_t>(self) + 0xA98 );
+  return mc_send_message_callback(self);
+}
 
-  kb_manager = nullptr;
+
+mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 89 74 24 ? 57 48 83 EC 20 48 8B 01 48 8B EA 48 8B F9 48", offsets(-5),
+bool, mc_unk_fn0, void * self, void * unk) {
+  #if 1 // fast place
+  // 26/02/2023 - NOTE: Simply checks for mov edx, 0x11! that's what the 0x11 is for.
+  // Checks if its a place request if so return a false to make the game think our place cooldown finished.
+  if (reinterpret_cast<std::uint8_t *>(__builtin_return_address(0))[8] == 0x11) {
+    return false; // Allows us to fast place
+  }
+  #endif // fast place
+    
   return mc_unk_fn0(self, unk);
 }
-
-mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "0F 85 ? ? ? ? 80 B9 ? ? ? ? ? 0F 85 ? ? ? ? 33", offsets(-40),
-void, mc_unk_fn_runs_per_tick, void * self, mc::list_container<char[32]> * unk_list) { 
-  return mc_unk_fn_runs_per_tick(self, unk_list);
-}
-#endif
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 69 C9 ? ? ? ? 48 99 48 F7 FF 48 03 C1 48 8B 93", offsets(-58),
 void *, mc_maybe_chat_tick, mc::unk_0 * self) {
   // Message update check
   // 24/02/2023 - TODO: This is not reliable if we add messages faster than we can read it'll skip some messages unless it runs on the same thread
-  // or something idk lol. better to hook the container append and listen there.
+  // or something idk lol. better to hook the container append and listen there. Not a priority ATM
   static void * last_end = nullptr;
   if (auto * cend = self->messages.end(); last_end != cend) {
     last_end = cend;
@@ -117,20 +118,15 @@ HRESULT, dx_present, void * self, UINT SyncInterval, UINT Flags) {
   return dx_present(self, SyncInterval, Flags);
 }
 
+#if 0
 mcbre_mk_hk_by_sig("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 27 49 8B 41", offsets(-24),
 HRESULT, dx_present1, void * self, UINT SyncInterval, UINT PresentFlags, void * pPresentParameters) {
   return dx_present1(self, SyncInterval, PresentFlags, pPresentParameters);
 }
 
-#if 0
 mcbre_mk_hk_by_export("User32.dll",
 BOOL, PeekMessageW, LPMSG lpMsg, HWND hWnd, UINT wMsgFilterMin, UINT wMsgFilterMax, UINT wRemoveMsg) {
   return PeekMessageW_(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
-}
-
-mcbre_mk_hk_by_export("ntdll.dll",
-LRESULT, NtdllDefWindowProc_W, HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-  return NtdllDefWindowProc_W_(hwnd, msg, wparam, lparam);
 }
 #endif
 
@@ -160,6 +156,9 @@ auto hooks::initialize() -> bool {
     if (!target)
       continue;
     hk.hooked = MH_CreateHook(target, hk.hkfn, reinterpret_cast<void **>(hk.pout)) == MH_OK && MH_EnableHook(target) == MH_OK;
+    #if defined(MCBRE_LOGGING) && MCBRE_LOGGING == 1
+    mcbre_log_dbg("Hook {} for {} @ {}", hk.hooked ? "successful" : "failed", __hk_get_name(hk), hk.cached_target);
+    #endif
   }
   return true; // 24/02/2023 : MH_EnableHook(MH_ALL_HOOKS) == MH_OK;
 }
@@ -178,6 +177,9 @@ auto hooks::uninitialize() -> bool {
   return MH_Uninitialize() == MH_OK;
 }
 
+#ifdef __hk_get_name
+  #undef __hk_get_name
+#endif
 #undef mcbre_mk_hk_by_export
 #undef mcbre_mk_hk_by_sig
 #undef offsets

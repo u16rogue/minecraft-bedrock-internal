@@ -16,7 +16,7 @@ struct hook_entry {
   const std::uint32_t id;
   bool hooked = false;
 
-#if defined(MCBRE_STORE_HOOK_NAME) 
+#if defined(MCBRE_STORE_HOOK_NAME) && MCBRE_STORE_HOOK_NAME == 1
   const char * idstr;
 #endif
 };
