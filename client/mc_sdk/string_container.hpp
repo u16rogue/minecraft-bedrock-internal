@@ -11,7 +11,7 @@ struct string_container {
     char inplace[0x10];
   };
   std::int64_t length;
-  char unk[8];
+  std::int64_t unk;
 
   auto c_str() -> char *;
 

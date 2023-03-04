@@ -6,12 +6,12 @@
 namespace mc {
 
 struct chat_message_data {
-  char pad0[40];
-  __int64 unk_var;
-  char pad1[56];
-  mc::string_container str;
-  bool unk_check; // 19/02/2023 - this can just be int and merged with pad2, i think its compiler pad aligned
-  char pad2[3];
+  void * unk0;
+  mc::string_container message;
+  mc::string_container context;
+  mc::string_container sender_name;
+  mc::string_container display_message;
+  std::int32_t unkflag;
   float maybe_fade_timer;
   char pad3[8];
 };
@@ -37,5 +37,22 @@ struct keybind_manager {
   } * vtable;
   mc::list_container<keybind_info> key_info;
 };
+
+struct maybe_chat_instance {
+  char pad0[0xA80];
+  void * chat_manager; // 0xA80
+  char pad1[0x8];
+  void ** unk0;
+  mc::string_container message; // 0xA98
+  char pad2[0x32];
+  bool unk1; // 0xAEA
+  bool unk2; // 0xEAB
+};
+
+static_assert(
+    offsetof(maybe_chat_instance, chat_manager) == 0xA80
+ && offsetof(maybe_chat_instance, message)      == 0xA98
+ && offsetof(maybe_chat_instance, unk1)         == 0xAEA,
+    "offset is wrong");
 
 }

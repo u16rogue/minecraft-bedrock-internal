@@ -17,6 +17,7 @@
 #include <sdk/vec.hpp>
 #include "mc_sdk/entt.hpp"
 #include "mc_sdk/structs.hpp"
+#include "values.hpp"
 
 #include <common/logging.hpp>
 
@@ -60,6 +61,17 @@
   };                                                                                                                        \
   static auto __hk_##name(__VA_ARGS__) -> rt
 
+#define mcbre_mk_hk_by_ptr(modname, ptr, rt, name, ...)                                                                              \
+  static rt(*name)(__VA_ARGS__) = nullptr;                                                                               \
+  static auto __hk_##name(__VA_ARGS__) -> rt;                                                                               \
+  static mcbre_imm {                                                                                                        \
+    registered_hooks.emplace_back(hooks::hook_entry {+[](void * base, int sz){                                              \
+        (void)sz;                                                                                                           \
+        return reinterpret_cast<void *>(ptr);                                                                               \
+    }, modname, &name, reinterpret_cast<void *>(&__hk_##name), mcbre::hash::cvfnv32(#name), false __hk_name_opt(name)}); \
+  };                                                                                                                        \
+  static auto __hk_##name(__VA_ARGS__) -> rt
+
 #if defined(MCBRE_LOGGING) && MCBRE_LOGGING == 1
   #if defined(MCBRE_STORE_HOOK_NAME) && MCBRE_STORE_HOOK_NAME == 1
     #define __hk_get_name(_) _.idstr
@@ -69,16 +81,26 @@
 #endif
 
 static std::vector<hooks::hook_entry> registered_hooks;
+static std::pair<std::uint8_t *, std::size_t> mc_module;
 
 // ---------------------------------------------------------------------------------------------------- 
 // --- Hooks
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 56 41 57 48 8B EC 48 83 EC ?? 48 8B F9", offsets(),
-std::uint64_t, mc_send_message_callback, void * self) {
-  mc::string_container * msg = reinterpret_cast<decltype(msg)>( reinterpret_cast<std::uintptr_t>(self) + 0xA98 );
+bool, mc_send_message_callback, mc::maybe_chat_instance * self) {
+  mc::string_container * msg = &self->message;
   return mc_send_message_callback(self);
 }
 
+mcbre_mk_hk_by_ptr("Minecraft.Windows.exe", values::mc_append_chat_log,
+void *, mc_chat_log, mc::unk_0 * self, mc::chat_message_data * entry, int unkarg0) {
+  // If chat log append is sent outside of minecraft (most likely us) just call original
+  void * rta = __builtin_return_address(0);
+  if (rta < mc_module.first && rta > mc_module.first + mc_module.second)
+    return mc_chat_log(self, entry, unkarg0);
+
+  return mc_chat_log(self, entry, unkarg0);
+}
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 89 74 24 ? 57 48 83 EC 20 48 8B 01 48 8B EA 48 8B F9 48", offsets(-5),
 bool, mc_unk_fn0, void * self, void * unk) {
@@ -103,6 +125,20 @@ void *, mc_maybe_chat_tick, mc::unk_0 * self) {
     last_end = cend;
     mc::chat_message_data * recent_msg = (cend - 1);
     // Dispatch chat update 
+  }
+
+  if (GetAsyncKeyState(VK_INSERT) & 0x1) {
+    mc::chat_message_data d {};
+    std::memcpy(&d, self->messages.end() - 1, sizeof(d));
+    d.unk0 = (void *)1;
+    d.message = "Hello!";
+    d.context = "mcbre log";
+    d.sender_name = "kamabato";
+    d.maybe_fade_timer = 10.f;
+    d.display_message = "Hello!";
+    d.unkflag = 0;
+    *(void **)&d.pad3 = 0;
+    values::mc_append_chat_log(self, &d, 4);
   }
   
   return mc_maybe_chat_tick(self);
@@ -144,6 +180,10 @@ auto hooks::initialize() -> bool {
   if (MH_Initialize() != MH_OK)
     return false;
 
+  mc_module = mcbre::utils::module_info("Minecraft.Windows.exe");
+  if (!mc_module.first)
+    return false;
+
   std::unordered_map<std::string, std::pair<std::uint8_t *, int>> module_cache = {};
   for (auto & hk : registered_hooks) {
     if (module_cache.find(hk.modname) == module_cache.end())
@@ -180,6 +220,7 @@ auto hooks::uninitialize() -> bool {
 #ifdef __hk_get_name
   #undef __hk_get_name
 #endif
+#undef mcbre_mk_hk_by_ptr
 #undef mcbre_mk_hk_by_export
 #undef mcbre_mk_hk_by_sig
 #undef offsets

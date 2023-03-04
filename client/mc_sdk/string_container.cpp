@@ -3,6 +3,10 @@
 #include "../values.hpp"
 
 auto mc::string_container::c_str() -> char * {
+  // 03/03/2023 - not sure if this is correct seems like its done for commands and stuff
+  if (unk >= 0x10)
+    return reinterpret_cast<string_container *>(ext)->c_str();
+
   if (length >= sizeof(inplace))
     return ext;
   return inplace;
