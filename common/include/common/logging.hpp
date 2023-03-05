@@ -10,7 +10,7 @@
 
 namespace mcbre::common {
 
-namespace details { constexpr int offset_index = []() consteval { return std::string(__FILE__).find(MCBRE_PROJ_DIR_NAME) + sizeof(MCBRE_PROJ_DIR_NAME) - 1; } (); }
+namespace details { constexpr int offset_index = []() consteval { return sizeof(MCBRE_PROJ_DIR) - 1; } (); }
 
 template <typename T, int sz>
 struct string_cont {
