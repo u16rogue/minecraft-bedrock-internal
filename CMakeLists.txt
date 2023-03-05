@@ -5,6 +5,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1) # for clangd
 # Project internal name
 add_compile_definitions(MCBRE_NAME="kamabato")
 add_compile_definitions(MCBRE_PROJ_DIR="${CMAKE_SOURCE_DIR}")
+
 message("-- mcbre > Source directory @ ${CMAKE_SOURCE_DIR}")
 
 # Logging toggle

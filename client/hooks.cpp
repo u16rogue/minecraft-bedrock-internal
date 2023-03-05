@@ -135,6 +135,11 @@ HRESULT, dx_present, void * self, UINT SyncInterval, UINT Flags) {
   return dx_present(self, SyncInterval, Flags);
 }
 
+mcbre_mk_hk_by_sig("ntdll.dll", "48 89 5C 24 08 44 89 44 24 18 48", offsets(),
+BOOL, LdrpCallInitRoutine, void * entry_point, HMODULE hmod, DWORD reason, LPVOID lpReserved) {
+  return LdrpCallInitRoutine(entry_point, hmod, reason, lpReserved);
+}
+
 #if 0
 mcbre_mk_hk_by_sig("dxgi.dll", "48 8B 05 ? ? ? ? 48 33 C4 48 89 45 27 49 8B 41", offsets(-24),
 HRESULT, dx_present1, void * self, UINT SyncInterval, UINT PresentFlags, void * pPresentParameters) {
