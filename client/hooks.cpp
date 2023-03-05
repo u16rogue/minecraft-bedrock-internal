@@ -14,13 +14,13 @@
 #include <common/pattern_scanner.hpp>
 #include <common/fnvhash.hpp>
 #include <common/utils.hpp>
-#include "mc_sdk/vec.hpp"
-#include "mc_sdk/entt.hpp"
-#include "mc_sdk/structs.hpp"
+#include <mc_sdk/vec.hpp>
+#include <mc_sdk/entt.hpp>
+#include <mc_sdk/structs.hpp>
 // --
 #include "game.hpp"
 // --
-#include "utils/chat_util.hpp"
+#include <game_utils/chat_util.hpp>
 
 #include <common/logging.hpp>
 
@@ -65,15 +65,15 @@
   };                                                                                                                        \
   static auto __hk_##name(__VA_ARGS__) -> rt
 
-#define mcbre_mk_hk_by_ptr(modname, ptr, rt, name, ...)                                                                              \
+#define mcbre_mk_hk_by_ptr(modname, ptr, rt, name, ...)                                                                  \
   static rt(*name)(__VA_ARGS__) = nullptr;                                                                               \
-  static auto __hk_##name(__VA_ARGS__) -> rt;                                                                               \
-  static mcbre_imm {                                                                                                        \
-    registered_hooks.emplace_back(hooks::hook_entry {+[](void * base, int sz){                                              \
-        (void)sz;                                                                                                           \
-        return reinterpret_cast<void *>(ptr);                                                                               \
+  static auto __hk_##name(__VA_ARGS__) -> rt;                                                                            \
+  static mcbre_imm {                                                                                                     \
+    registered_hooks.emplace_back(hooks::hook_entry {+[](void * base, int sz){                                           \
+        (void)sz;                                                                                                        \
+        return reinterpret_cast<void *>(ptr);                                                                            \
     }, modname, &name, reinterpret_cast<void *>(&__hk_##name), mcbre::hash::cvfnv32(#name), false __hk_name_opt(name)}); \
-  };                                                                                                                        \
+  };                                                                                                                     \
   static auto __hk_##name(__VA_ARGS__) -> rt
 
 #if defined(MCBRE_LOGGING) && MCBRE_LOGGING == 1

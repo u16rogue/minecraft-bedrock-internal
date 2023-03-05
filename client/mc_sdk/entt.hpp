@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vec.hpp"
+#include <mc_sdk/vec.hpp>
 
 namespace mc {
 

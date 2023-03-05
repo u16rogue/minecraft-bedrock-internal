@@ -6,19 +6,20 @@
 
 #include <common/logging.hpp>
 
-#include "game.hpp"
-#include "hooks.hpp"
+#include <game.hpp>
+#include <hooks.hpp>
 
-#include "utils/chat_util.hpp"
+#include <game_utils/chat_util.hpp>
 
-auto __stdcall init_main(HMODULE hmod) -> DWORD {
+static auto load_plugin(const char * msg) -> bool {
+  return false;
+}
+
+static auto __stdcall init_main(HMODULE hmod) -> DWORD {
   game::initialize();
   hooks::initialize();
-  game::utils::chat::register_command("greet", +[](const char *) {
-    game::utils::chat::add("Hello everyone!");
-    return true;
-  });
-  game::utils::chat::add("mcbre client successfully loaded!");
+  game::utils::chat::register_command("plug", load_plugin);
+  game::utils::chat::add("[" MCBRE_NAME "] mcbre client successfully loaded!");
   return 0;
 }
 

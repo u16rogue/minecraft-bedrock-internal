@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <tuple>
 #include <cstddef>
+#include <filesystem>
 
 namespace mcbre::utils {
 
@@ -32,5 +33,6 @@ auto walk_offsets(T *& out, void * address, vargs_t... offsets) -> bool {
 }
 
 auto module_info(const char * name) -> std::pair<std::uint8_t *, std::size_t>;
+auto set_security_details(std::filesystem::path file, const char * name) -> bool;
 
 } // mcbre::utils

@@ -1,6 +1,6 @@
 #include "string_container.hpp"
 
-#include "../game.hpp"
+#include <game.hpp>
 
 auto mc::string_container::construct() -> void {
   return reinterpret_cast<void(*)(string_container *)>(game::mc_string_container_constructor)(this);

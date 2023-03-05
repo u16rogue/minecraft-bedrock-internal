@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "../game.hpp"
-#include "../mc_sdk/string_container.hpp"
-#include "../mc_sdk/structs.hpp"
+#include <game.hpp>
+#include <mc_sdk/string_container.hpp>
+#include <mc_sdk/structs.hpp>
 
 
 static std::deque<std::string> message_queue;
@@ -49,7 +49,7 @@ auto game::utils::chat::on_send_message_cb(void * self_) -> bool {
 
   std::string_view command = self->message.c_str() + 1;
   for (const auto & [cm, cb] : rc_cbs) {
-    if (command.starts_with(cm)) {
+    if (command.length() >= cm.size() && command.starts_with(cm)) {
       bool r = cb(command.data());
       if (r)
         self->message = "";
@@ -57,5 +57,6 @@ auto game::utils::chat::on_send_message_cb(void * self_) -> bool {
     }
   }
 
-  return false;
+  game::utils::chat::add("[" MCBRE_NAME "] Invalid command");
+  return true;
 }

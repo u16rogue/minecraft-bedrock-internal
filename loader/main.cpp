@@ -4,13 +4,12 @@
 #include <string>
 #include <string_view>
 
-#include <AclAPI.h>
-#include <TlHelp32.h>
 #include <Windows.h>
-#include <sddl.h>
+#include <TlHelp32.h>
 
 #include <common/logging.hpp>
 #include <common/metapp.hpp>
+#include <common/utils.hpp>
 
 const char *          mc_im_name  = "Minecraft.Windows.exe";
 std::filesystem::path client_name = "client.dll";
@@ -23,74 +22,6 @@ static auto get_bin_path() -> std::optional<std::filesystem::path> {
   if (i == std::string::npos)
     return std::nullopt;
   return std::make_optional(s.substr(0, i));
-}
-
-static auto set_security_details(std::filesystem::path file, const char * name) -> bool {
-  EXPLICIT_ACCESS_A ea[] = {
-    {
-      .grfAccessPermissions = GENERIC_ALL,
-      .grfAccessMode        = SET_ACCESS,
-      .grfInheritance       = NO_INHERITANCE,
-      .Trustee              = {
-                               .TrusteeForm = TRUSTEE_IS_NAME,
-                               .TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP,
-                               .ptstrName   = (LPCH)"SYSTEM",
-                               },
-    },
-    {
-      .grfAccessPermissions = GENERIC_ALL,
-      .grfAccessMode        = SET_ACCESS,
-      .grfInheritance       = NO_INHERITANCE,
-      .Trustee              = {
-                               .TrusteeForm = TRUSTEE_IS_NAME,
-                               .TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP,
-                               .ptstrName   = (LPCH)"Users",
-                               },
-    },
-    {
-      .grfAccessPermissions = GENERIC_ALL,
-      .grfAccessMode        = SET_ACCESS,
-      .grfInheritance       = NO_INHERITANCE,
-      .Trustee              = {
-                               .TrusteeForm = TRUSTEE_IS_NAME,
-                               .TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP,
-                               .ptstrName   = (LPCH)name,
-                               },
-    },
-  };
-
-  PSECURITY_DESCRIPTOR sd   = nullptr;
-  PACL                 nacl = nullptr; // New ACL
-  if (SetEntriesInAcl(mcbre::metapp::array_size(ea), ea, nullptr, &nacl) != ERROR_SUCCESS) {
-    mcbre_log("Failure for SetEntriesInAcl");
-    return false;
-  }
-  mcbre_defer {
-    if (sd && nacl) LocalFree(nacl);
-  };
-
-  sd = LocalAlloc(LPTR, SECURITY_DESCRIPTOR_MIN_LENGTH);
-  if (!sd) {
-    mcbre_log("Failure for LocalAlloc");
-    return false;
-  }
-  mcbre_defer {
-    if (sd) LocalFree(sd);
-  };
-
-  if (!InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION) || !SetSecurityDescriptorDacl(&sd, TRUE, nacl, FALSE)) {
-    mcbre_log("Failure for InitializeSecurityDescriptor or SetSecurityDescriptorDacl");
-    return false;
-  }
-  nacl = nullptr;
-
-  if (!SetFileSecurity(file.string().c_str(), DACL_SECURITY_INFORMATION, &sd)) {
-    mcbre_log("Failure for SetFileSecurity");
-    return false;
-  }
-  sd = nullptr;
-
-  return true;
 }
 
 auto main(int argc, char ** argv) -> int {
@@ -125,7 +56,7 @@ auto main(int argc, char ** argv) -> int {
   std::string full_path = std::filesystem::absolute(client_name).string();
   mcbre_log("Absolute path: {}", full_path);
 
-  if (!unload_only && !set_security_details(full_path.c_str(), "ALL APPLICATION PACKAGES"))
+  if (!unload_only && !mcbre::utils::set_security_details(full_path.c_str(), "ALL APPLICATION PACKAGES"))
     return 8;
 
   HANDLE procsnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);

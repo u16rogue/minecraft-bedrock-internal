@@ -20,8 +20,13 @@ add_library(
 	"game.hpp"
 	"game.cpp"
 
-	"utils/chat_util.hpp"
-	"utils/chat_util.cpp"
+	"module_manager.hpp"
+	"module_manager.cpp"
+	"plugin_manager.hpp"
+	"plugin_manager.cpp"
+
+	"game_utils/chat_util.hpp"
+	"game_utils/chat_util.cpp"
 
 	"mc_sdk/structs.hpp"
 	"mc_sdk/list_container.hpp"
@@ -49,6 +54,12 @@ target_link_libraries(
 	mcbre_common_lib
 	mcbre_sdk
 	minhook
+)
+
+target_include_directories(
+	${PROJECT_NAME}
+	PRIVATE
+	"${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 if (MCBRE_STORE_HOOK_NAMES)
