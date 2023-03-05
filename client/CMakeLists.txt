@@ -17,8 +17,11 @@ add_library(
 
 	"hooks.hpp"
 	"hooks.cpp"
-	"values.hpp"
-	"values.cpp"
+	"game.hpp"
+	"game.cpp"
+
+	"utils/chat_util.hpp"
+	"utils/chat_util.cpp"
 
 	"mc_sdk/structs.hpp"
 	"mc_sdk/list_container.hpp"

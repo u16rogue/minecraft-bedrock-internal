@@ -7,12 +7,15 @@
 #include <common/logging.hpp>
 #include <sdk/vec.hpp>
 
-#include "values.hpp"
+#include "game.hpp"
 #include "hooks.hpp"
 
+#include "utils/chat_util.hpp"
+
 auto __stdcall init_main(HMODULE hmod) -> DWORD {
-  values::initialize();
+  game::initialize();
   hooks::initialize();
+  game::utils::chat::add("mcbre client successfully loaded!");
   return 0;
 }
 

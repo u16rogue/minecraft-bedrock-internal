@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <cstdint>
+#include <string_view>
 
 namespace mc {
 
@@ -18,6 +19,8 @@ struct string_container {
 
   auto set_str(const char * str, std::size_t sz) -> string_container &;
   
+  auto operator=(std::string_view str) -> string_container &;
+
   template <int sz>
   auto operator=(const char (&str)[sz]) -> string_container & {
     return set_str(str, sz - 1);

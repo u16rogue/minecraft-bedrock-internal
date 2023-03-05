@@ -1,6 +1,6 @@
 #pragma once
 
-namespace values {
+namespace game {
 
 inline void * mc_string_container_set_method  = nullptr;
 inline void * mc_string_container_constructor = nullptr;

@@ -17,7 +17,10 @@
 #include <sdk/vec.hpp>
 #include "mc_sdk/entt.hpp"
 #include "mc_sdk/structs.hpp"
-#include "values.hpp"
+// --
+#include "game.hpp"
+// --
+#include "utils/chat_util.hpp"
 
 #include <common/logging.hpp>
 
@@ -92,7 +95,7 @@ bool, mc_send_message_callback, mc::maybe_chat_ui_manager * self) {
   return mc_send_message_callback(self);
 }
 
-mcbre_mk_hk_by_ptr("Minecraft.Windows.exe", values::mc_append_chat_log,
+mcbre_mk_hk_by_ptr("Minecraft.Windows.exe", game::mc_append_chat_log,
 void *, mc_chat_log, mc::chat_manager * self, mc::chat_message_data * entry, int unkarg0) {
   // If chat log append is sent outside of minecraft (most likely us) just call original
   void * rta = __builtin_return_address(0);
@@ -116,6 +119,7 @@ bool, mc_unk_fn0, void * self, void * unk) {
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 69 C9 ? ? ? ? 48 99 48 F7 FF 48 03 C1 48 8B 93", offsets(-58),
 void *, mc_maybe_chat_tick, mc::chat_manager * self) {
+  game::utils::chat::on_chat_tick_cb(self);
   return mc_maybe_chat_tick(self);
 }
 
