@@ -14,7 +14,7 @@
 #include <common/pattern_scanner.hpp>
 #include <common/fnvhash.hpp>
 #include <common/utils.hpp>
-#include <sdk/vec.hpp>
+#include "mc_sdk/vec.hpp"
 #include "mc_sdk/entt.hpp"
 #include "mc_sdk/structs.hpp"
 // --
@@ -126,7 +126,7 @@ void *, mc_maybe_chat_tick, mc::chat_manager * self) {
 }
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "57 48 83 EC 20 48 8B 81 ? ? ? ? 48 8B DA 48 8B F9", offsets(-5),
-void, mc_entt_add_delta, mc::entt * self, mcbre::sdk::vec3 * delta) {
+void, mc_entt_add_delta, mc::entt * self, mc::vec3 * delta) {
   return mc_entt_add_delta(self, delta);
 }
 

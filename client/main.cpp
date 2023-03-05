@@ -5,7 +5,6 @@
 #include <MinHook.h>
 
 #include <common/logging.hpp>
-#include <sdk/vec.hpp>
 
 #include "game.hpp"
 #include "hooks.hpp"

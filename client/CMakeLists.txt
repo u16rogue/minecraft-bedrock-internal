@@ -28,6 +28,8 @@ add_library(
 
 	"mc_sdk/entt.hpp"
 	"mc_sdk/entt.cpp"
+	"mc_sdk/vec.hpp"
+	"mc_sdk/vec.cpp"
 	"mc_sdk/string_container.hpp"
 	"mc_sdk/string_container.cpp"
 )

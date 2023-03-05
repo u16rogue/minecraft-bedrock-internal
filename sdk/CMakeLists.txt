@@ -4,9 +4,7 @@ project(mcbre_sdk)
 
 add_library(
   ${PROJECT_NAME}
-  STATIC
-  "include/sdk/vec.hpp"
-  "src/vec.cpp"
+  INTERFACE
 )
 
 set_target_properties(
@@ -17,6 +15,6 @@ set_target_properties(
 
 target_include_directories(
   ${PROJECT_NAME}
-  PUBLIC
+  INTERFACE
   "include/"
 )
