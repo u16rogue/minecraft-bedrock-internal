@@ -17,7 +17,7 @@ struct chat_message_data {
 };
 static_assert(sizeof(chat_message_data) == 0x98, "mc::chat_message_data has an invalid size.");
 
-struct unk_0 {
+struct chat_manager {
   char pad0[0x140];
   mc::list_container<chat_message_data> messages;
 };
@@ -38,9 +38,9 @@ struct keybind_manager {
   mc::list_container<keybind_info> key_info;
 };
 
-struct maybe_chat_instance {
+struct maybe_chat_ui_manager {
   char pad0[0xA80];
-  void * chat_manager; // 0xA80
+  void * unk_manager; // 0xA80
   char pad1[0x8];
   void ** unk0;
   mc::string_container message; // 0xA98
@@ -50,9 +50,9 @@ struct maybe_chat_instance {
 };
 
 static_assert(
-    offsetof(maybe_chat_instance, chat_manager) == 0xA80
- && offsetof(maybe_chat_instance, message)      == 0xA98
- && offsetof(maybe_chat_instance, unk1)         == 0xAEA,
+    offsetof(maybe_chat_ui_manager, unk_manager) == 0xA80
+ && offsetof(maybe_chat_ui_manager, message)     == 0xA98
+ && offsetof(maybe_chat_ui_manager, unk1)        == 0xAEA,
     "offset is wrong");
 
 }

@@ -2,11 +2,11 @@
 
 #include "../values.hpp"
 
-auto mc::string_container::c_str() -> char * {
-  // 03/03/2023 - not sure if this is correct seems like its done for commands and stuff
-  if (unk >= 0x10)
-    return reinterpret_cast<string_container *>(ext)->c_str();
+auto mc::string_container::construct() -> void {
+  return reinterpret_cast<void(*)(string_container *)>(values::mc_string_container_constructor)(this);
+}
 
+auto mc::string_container::c_str() -> char * {
   if (length >= sizeof(inplace))
     return ext;
   return inplace;

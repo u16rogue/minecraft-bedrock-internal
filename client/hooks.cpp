@@ -87,13 +87,13 @@ static std::pair<std::uint8_t *, std::size_t> mc_module;
 // --- Hooks
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 56 41 57 48 8B EC 48 83 EC ?? 48 8B F9", offsets(),
-bool, mc_send_message_callback, mc::maybe_chat_instance * self) {
+bool, mc_send_message_callback, mc::maybe_chat_ui_manager * self) {
   mc::string_container * msg = &self->message;
   return mc_send_message_callback(self);
 }
 
 mcbre_mk_hk_by_ptr("Minecraft.Windows.exe", values::mc_append_chat_log,
-void *, mc_chat_log, mc::unk_0 * self, mc::chat_message_data * entry, int unkarg0) {
+void *, mc_chat_log, mc::chat_manager * self, mc::chat_message_data * entry, int unkarg0) {
   // If chat log append is sent outside of minecraft (most likely us) just call original
   void * rta = __builtin_return_address(0);
   if (rta < mc_module.first && rta > mc_module.first + mc_module.second)
@@ -107,40 +107,15 @@ bool, mc_unk_fn0, void * self, void * unk) {
   #if 1 // fast place
   // 26/02/2023 - NOTE: Simply checks for mov edx, 0x11! that's what the 0x11 is for.
   // Checks if its a place request if so return a false to make the game think our place cooldown finished.
-  if (reinterpret_cast<std::uint8_t *>(__builtin_return_address(0))[8] == 0x11) {
-    return false; // Allows us to fast place
-  }
+  if (reinterpret_cast<std::uint8_t *>(__builtin_return_address(0))[8] == 0x11)
+    return false;
   #endif // fast place
     
   return mc_unk_fn0(self, unk);
 }
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 69 C9 ? ? ? ? 48 99 48 F7 FF 48 03 C1 48 8B 93", offsets(-58),
-void *, mc_maybe_chat_tick, mc::unk_0 * self) {
-  // Message update check
-  // 24/02/2023 - TODO: This is not reliable if we add messages faster than we can read it'll skip some messages unless it runs on the same thread
-  // or something idk lol. better to hook the container append and listen there. Not a priority ATM
-  static void * last_end = nullptr;
-  if (auto * cend = self->messages.end(); last_end != cend) {
-    last_end = cend;
-    mc::chat_message_data * recent_msg = (cend - 1);
-    // Dispatch chat update 
-  }
-
-  if (GetAsyncKeyState(VK_INSERT) & 0x1) {
-    mc::chat_message_data d {};
-    std::memcpy(&d, self->messages.end() - 1, sizeof(d));
-    d.unk0 = (void *)1;
-    d.message = "Hello!";
-    d.context = "mcbre log";
-    d.sender_name = "kamabato";
-    d.maybe_fade_timer = 10.f;
-    d.display_message = "Hello!";
-    d.unkflag = 0;
-    *(void **)&d.pad3 = 0;
-    values::mc_append_chat_log(self, &d, 4);
-  }
-  
+void *, mc_maybe_chat_tick, mc::chat_manager * self) {
   return mc_maybe_chat_tick(self);
 }
 
