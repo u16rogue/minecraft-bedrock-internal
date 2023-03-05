@@ -39,6 +39,7 @@
 #else
   #define __hk_name_opt(name)
 #endif
+
 #define offsets(...) __VA_OPT__(,) __VA_ARGS__
 
 #define mcbre_mk_hk_by_sig(modname, sig, offsets_, rt, name, ...)                                                        \
@@ -91,7 +92,8 @@ static std::pair<std::uint8_t *, std::size_t> mc_module;
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 56 41 57 48 8B EC 48 83 EC ?? 48 8B F9", offsets(),
 bool, mc_send_message_callback, mc::maybe_chat_ui_manager * self) {
-  mc::string_container * msg = &self->message;
+  if (game::utils::chat::on_send_message_cb(self))
+    return false;
   return mc_send_message_callback(self);
 }
 

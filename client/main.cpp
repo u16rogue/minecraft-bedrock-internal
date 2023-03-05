@@ -15,6 +15,10 @@
 auto __stdcall init_main(HMODULE hmod) -> DWORD {
   game::initialize();
   hooks::initialize();
+  game::utils::chat::register_command("greet", +[](const char *) {
+    game::utils::chat::add("Hello everyone!");
+    return true;
+  });
   game::utils::chat::add("mcbre client successfully loaded!");
   return 0;
 }
