@@ -8,6 +8,8 @@ add_compile_definitions(MCBRE_PROJ_DIR="${CMAKE_SOURCE_DIR}")
 
 message("-- mcbre > Source directory @ ${CMAKE_SOURCE_DIR}")
 
+option(MCBRE_LTEST "Local test" OFF)
+
 # Logging toggle
 option(MCBRE_LOGGING "Enable console logging" ON)
 if (MCBRE_LOGGING)
@@ -69,3 +71,7 @@ add_subdirectory("sdk/")
 add_subdirectory("common/")
 add_subdirectory("loader/")
 add_subdirectory("client/")
+
+if (MCBRE_LTEST)
+  add_subdirectory("ltest/")
+endif()

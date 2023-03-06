@@ -8,6 +8,7 @@
 
 #include <game.hpp>
 #include <hooks.hpp>
+#include <plugin_manager.hpp>
 
 #include <game_utils/chat_util.hpp>
 
@@ -18,7 +19,7 @@ static auto load_plugin(const char * msg) -> bool {
 static auto __stdcall init_main(HMODULE hmod) -> DWORD {
   game::initialize();
   hooks::initialize();
-  game::utils::chat::register_command("plug", load_plugin);
+  manager::plugins::initialize();
   game::utils::chat::add("[" MCBRE_NAME "] mcbre client successfully loaded!");
   return 0;
 }
@@ -33,6 +34,7 @@ auto __stdcall DllMain(HMODULE hmod, DWORD reason, LPVOID reserved) -> BOOL {
     }
 
     case DLL_PROCESS_DETACH: {
+      manager::plugins::dispose();
       hooks::uninitialize();
     }
 

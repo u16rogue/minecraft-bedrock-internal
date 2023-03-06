@@ -9,3 +9,4 @@ build/
 notes.txt
 .cache/
 sdk/
+ltest/

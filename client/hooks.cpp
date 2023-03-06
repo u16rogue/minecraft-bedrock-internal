@@ -21,6 +21,8 @@
 #include "game.hpp"
 // --
 #include <game_utils/chat_util.hpp>
+#include <sdk/client_interface.hpp>
+#include <plugin_manager.hpp>
 
 #include <common/logging.hpp>
 
@@ -92,6 +94,12 @@ static std::pair<std::uint8_t *, std::size_t> mc_module;
 
 mcbre_mk_hk_by_sig("Minecraft.Windows.exe", "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 56 41 57 48 8B EC 48 83 EC ?? 48 8B F9", offsets(),
 bool, mc_send_message_callback, mc::maybe_chat_ui_manager * self) {
+  if (std::string_view s = self->message.c_str(); s.starts_with(".plug ") && s.length() >= 6) {
+    manager::plugins::load(s.substr(6).data());
+    self->message = "";
+    return false;
+  }
+
   if (game::utils::chat::on_send_message_cb(self))
     return false;
   return mc_send_message_callback(self);
@@ -136,8 +144,21 @@ HRESULT, dx_present, void * self, UINT SyncInterval, UINT Flags) {
 }
 
 mcbre_mk_hk_by_sig("ntdll.dll", "48 89 5C 24 08 44 89 44 24 18 48", offsets(),
-BOOL, LdrpCallInitRoutine, void * entry_point, HMODULE hmod, DWORD reason, LPVOID lpReserved) {
-  return LdrpCallInitRoutine(entry_point, hmod, reason, lpReserved);
+BOOL, LdrpCallInitRoutine, void * entry_point, HMODULE hmod, DWORD reason, LPVOID lpvReserved) {
+  sdk::load_info li {};
+  if (reason == DLL_PROCESS_ATTACH && manager::plugins::is_plugload_thread()) {
+    li = {
+      .client_sdk_version = sdk::version,
+      .client             = reinterpret_cast<sdk::client_intf *>(manager::plugins::get_client_interface()),
+      .instance           = nullptr,
+    };
+    lpvReserved = &li;
+  }
+  BOOL r = LdrpCallInitRoutine(entry_point, hmod, reason, lpvReserved);
+  if (li.client && r) {
+    manager::plugins::set_plugload_instance(li.instance);
+  }
+  return r;
 }
 
 #if 0
