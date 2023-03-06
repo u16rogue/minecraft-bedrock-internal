@@ -8,3 +8,4 @@ CMakeSettings.json
 build/
 notes.txt
 .cache/
+sdk/
