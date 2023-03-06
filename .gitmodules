@@ -2,3 +2,6 @@
 	path = deps/minhook
 	url = https://github.com/TsudaKageyu/minhook.git
 	shallow = true
+[submodule "sdk"]
+	path = sdk
+	url = git@github.com:u16rogue/mcbre-plugin-sdk.git
